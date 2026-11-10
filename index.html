@@ -2174,12 +2174,18 @@ function updateImage(code, num) {
   currentImgNum = num;
   const box = document.getElementById('main-img-box');
   const img = document.createElement('img');
-  const imageBases = [BASE_IMG, 'https://b.tararirap.org/'];
+
+  // 묵적(MJ)의 NSFW 에셋(51~156)은 기존 캐릭터 이미지 저장소와
+  // 경로가 다를 수 있으므로 b.tararirap.org를 우선 조회한다.
+  // 실패하면 기존 R2 주소로 재시도한다.
+  const isMukjeokNsfw = code === 'MJ' && num >= 51 && num <= 156;
+  const imageBases = isMukjeokNsfw
+    ? ['https://b.tararirap.org/', BASE_IMG]
+    : [BASE_IMG, 'https://b.tararirap.org/'];
   let baseIndex = 0;
 
   img.alt = code + ' ' + num;
   img.onerror = function () {
-    // 기존 R2 주소에 해당 에셋이 없으면 기존 공개 이미지 도메인도 확인.
     if (baseIndex < imageBases.length - 1) {
       baseIndex += 1;
       this.src = imageBases[baseIndex] + code + '/' + num + '.webp';
@@ -2224,12 +2230,14 @@ function changeFaction(d) {
 
 function getCharAssetNums(code) {
   const nums = [];
+  // 묵적(MJ)은 여성 NPC이며 51~156번 NSFW 에셋을 별도로 보장한다.
+  const hasFemaleAssets = FEMALE_CODES.has(code) || code === 'MJ';
   for (let i = 1; i <= 30; i++) nums.push(i);
-  if (FEMALE_CODES.has(code)) {
+  if (hasFemaleAssets) {
     for (let i = 31; i <= 40; i++) nums.push(i);
   }
   for (let i = 41; i <= 50; i++) nums.push(i);
-  if (FEMALE_CODES.has(code)) {
+  if (hasFemaleAssets) {
     for (let i = 51; i <= 156; i++) nums.push(i);
   }
   return nums;
