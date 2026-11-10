@@ -1954,7 +1954,9 @@ function showTab(id) {
 <script>
 const BASE_IMG = 'https://pub-8b33947d78a743c0a32c7e6748517e53.r2.dev/';
 const imageTags = ['등장','기쁨','웃음','슬픔','눈물','짜증','분노','경멸','질투','의문','고민','놀람','당황','절망','부끄','진지','지침','지루','졸림','안도','다도','음주','식사','목욕','수면','질주','운기','치료','독서','편지','애정','쓰담받음','쓰담','포옹','키스','발정','유혹','임신','결혼','육아','준비','전투','부상','절초','패배','은신','도주','포박','고문','죽음','포옹裸','키스裸','가슴애무','유두빨기','유두(모유)','파이즈리','파이즈리(射)','수유대딸','수유대딸(射)','겨드랑이유혹','겨드랑이애무','겨드랑이섹스','겨드랑이섹스(射)','보지유혹','자위','자위(절정)','보지애무','보지애무(절정)','커닐링구스','커닐링구스(절정)','항문유혹','항문애무','항문애무(절정)','리밍','리밍(절정)','알몸유혹','핸드잡','핸드잡(射)','풋잡','풋잡(射)','림잡','림잡(射)','펠라','펠라(射)','_69','_69(射)','오망꼬댄스','정상위','정상위(射)','기승위','기승위(射)','반전기승위','반전기승위(射)','후배위','후배위(射)','측위','측위(射)','대면좌위','대면좌위(射)','아마존','아마존(射)','들박','들박(射)','교배프레스','교배프레스(射)','After','After(수정)','트월킹','항문정상위','항문정상위(射)','항문기승위','항문기승위(射)','항문반전기승위','항문반전기승위(射)','항문후배위','항문후배위(射)','항문측위','항문측위(射)','After(항문)','베갯머리송사','임신裸','임신정상위','임신정상위(射)','임신기승위','임신기승위(射)','임신반전기승위','임신반전기승위(射)','임신후배위','임신후배위(射)','임신측위','임신측위(射)','임신대면좌위','임신대면좌위(射)','(134)','(135)','(136)','(137)','(138)','(139)','(140)','(141)','(142)','(143)','(144)','(145)','(146)','(147)','(148)','(149)','알몸도게자','강간','강간(射)','갱뱅','갱뱅(射)','After(강간)','임신(강간)'];
-const FEMALE_CODES = new Set(['ND','BR','BSY','BYH','CH','CR','CWA','DAY','DGMY','HBR','HHW','HSA','HW','JG','JR','JYA','JYH','ML','MM','MYG','ND','NGS','PHR','PYH','SCO','SGAR','SH','SHR','SMG','SMY','SR','SUH','SW','SWY','MIH','YSS','UY','WMSY','WSY','YBY','YH','YJ','YJG','YSJ','YSR','YY','ZHYA','ZR','ZWT','KSH','CY','SUY','SRN','SRT','DHM','DHN','SYR']);
+const FEMALE_CODES = new Set(['ND','BR','BSY','BYH','CH','CR','CWA','DAY','DGMY','HBR','HHW','HSA','HW','JG','JR','JYA','JYH','ML','MM','MJ','MYG','NGS','PHR','PYH','SCO','SGAR','SH','SHR','SMG','SMY','SR','SUH','SW','SWY','MIH','YSS','UY','WMSY','WSY','YBY','YH','YJ','YJG','YSJ','YSR','YY','ZHYA','ZR','ZWT','KSH','CY','SUY','SRN','SRT','DHM','DHN','SYR']);
+
+// 여성 캐릭터의 NSFW 에셋은 51~156번을 사용한다.
 
 let currentCode = '', currentImgNum = 1, modalMode = 'char', currentFactionIndex = 0;
 
@@ -2152,16 +2154,8 @@ function openChar(code, name, desc) {
   document.getElementById('view-desc').innerText = desc;
   const list = document.getElementById('asset-list');
   list.innerHTML = '';
-  const isFemale = FEMALE_CODES.has(code);
-  const nums = [];
-  for (let i = 1; i <= 30; i++) nums.push(i);
-  if (isFemale) {
-    for (let i = 31; i <= 40; i++) nums.push(i);
-  }
-  for (let i = 41; i <= 50; i++) nums.push(i);
-  if (isFemale) {
-    for (let i = 51; i <= 156; i++) nums.push(i);
-  }
+  // 목록 표시와 이전/다음 이동이 동일한 에셋 번호 규칙을 사용하도록 통일.
+  const nums = getCharAssetNums(code);
   nums.forEach(i => {
     const btn = document.createElement('div');
     btn.className = 'asset-num';
@@ -2179,7 +2173,24 @@ function openChar(code, name, desc) {
 function updateImage(code, num) {
   currentImgNum = num;
   const box = document.getElementById('main-img-box');
-  box.innerHTML = '<img src="' + BASE_IMG + code + '/' + num + '.webp" onerror="this.onerror=null;this.src=\'https://via.placeholder.com/420x560?text=Image\'" />';
+  const img = document.createElement('img');
+  const imageBases = [BASE_IMG, 'https://b.tararirap.org/'];
+  let baseIndex = 0;
+
+  img.alt = code + ' ' + num;
+  img.onerror = function () {
+    // 기존 R2 주소에 해당 에셋이 없으면 기존 공개 이미지 도메인도 확인.
+    if (baseIndex < imageBases.length - 1) {
+      baseIndex += 1;
+      this.src = imageBases[baseIndex] + code + '/' + num + '.webp';
+      return;
+    }
+    this.onerror = null;
+    this.src = 'https://via.placeholder.com/420x560?text=Image';
+  };
+  img.src = imageBases[baseIndex] + code + '/' + num + '.webp';
+  box.replaceChildren(img);
+
   document.querySelectorAll('.asset-num').forEach(b => b.classList.remove('active'));
   const a = document.getElementById('btn-' + num);
   if (a) a.classList.add('active');
@@ -2212,12 +2223,15 @@ function changeFaction(d) {
 }
 
 function getCharAssetNums(code) {
-  const isFemale = FEMALE_CODES.has(code);
   const nums = [];
   for (let i = 1; i <= 30; i++) nums.push(i);
-  if (isFemale) for (let i = 31; i <= 40; i++) nums.push(i);
+  if (FEMALE_CODES.has(code)) {
+    for (let i = 31; i <= 40; i++) nums.push(i);
+  }
   for (let i = 41; i <= 50; i++) nums.push(i);
-  if (isFemale) for (let i = 51; i <= 156; i++) nums.push(i);
+  if (FEMALE_CODES.has(code)) {
+    for (let i = 51; i <= 156; i++) nums.push(i);
+  }
   return nums;
 }
 
